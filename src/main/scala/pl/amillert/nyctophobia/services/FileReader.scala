@@ -2,10 +2,12 @@ package pl.amillert
 package nyctophobia
 package services
 
-import java.io.File
 import zio._
 
+import java.io.File
+
 trait FileReader
+
 object FileReader {
   type FileReaderEnv = FileReader.Service
 
@@ -13,11 +15,10 @@ object FileReader {
     def read(config: Config): Task[Array[File]]
   }
 
-  val live: FileReaderEnv = new Service {
-    override def read(config: Config): Task[Array[File]] = Task {
-      (new File(config.inDir)).listFiles.filter(_.isFile)
+  val live: FileReaderEnv = (config: Config) =>
+    Task {
+      new File(config.inDir).listFiles.filter(_.isFile)
     }
-  }
 
   def read(config: Config): Task[Array[File]] =
     live.read(config)

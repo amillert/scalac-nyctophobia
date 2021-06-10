@@ -11,6 +11,7 @@ case class Config(
   )
 
 trait ConfigParser
+
 object ConfigParser {
   type ConfigParserEnv = ConfigParser.Service
 
@@ -20,20 +21,18 @@ object ConfigParser {
     def parse(args: List[String]): Task[Config]
   }
 
-  val live: ConfigParserEnv = new Service {
-    override def parse(args: List[String]): Task[Config] =
-      ZIO
-        .fromOption {
-          args match {
-            case in :: out :: thresh :: Nil =>
-              Some(Config(in, out, thresh.toInt))
-            case _ =>
-              None: Option[Config]
-          }
+  val live: ConfigParserEnv = (args: List[String]) =>
+    ZIO
+      .fromOption {
+        args match {
+          case in :: out :: thresh :: Nil =>
+            Some(Config(in, out, thresh.toInt))
+          case _ =>
+            None: Option[Config]
         }
-        .orDieWith(_ => FailConfigParserMissingParameter)
-  }
+      }
+      .orDieWith(_ => FailConfigParserMissingParameter)
 
-  def parse(args: List[String]) =
+  def parse(args: List[String]): Task[Config] =
     live.parse(args)
 }
