@@ -10,12 +10,7 @@ object Main extends App {
     for {
       config <- ConfigParser.parse(args)
       files  <- FileReader.read(config)
-      _      <-
-        ZIO
-          .forkAll_(
-            files
-              .map(ImageProcessor.parse(_, config))
-          )
+      _ <- ImageProcessor.parse(files, config)
     } yield ()
 
   override def run(args: List[String]): URIO[ZEnv, ExitCode] =
