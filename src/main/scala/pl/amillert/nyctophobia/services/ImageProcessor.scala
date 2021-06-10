@@ -2,65 +2,59 @@ package pl.amillert
 package nyctophobia
 package services
 
-import java.io._
-import javax.imageio.ImageIO
 import zio._
 
+import java.io._
+import javax.imageio.ImageIO
+
 trait ImageProcessor
+
 object ImageProcessor {
   import zio.console._
 
   type ImageProcessorEnv = ImageProcessor.Service
 
   trait Service {
-    def parse(file: File, config: Config): ZIO[Console, IOException, Unit]
-  }
-
-  val live: ImageProcessorEnv = new Service {
-    override def parse(
-        file: File,
+    def parse(
+        files: Array[File],
         config: Config
-      ): ZIO[Console, IOException, Unit] = {
-      val img = ImageIO read file
-      val pixels =
-        for {
-          x <- (0 until img.getWidth)
-          y <- (0 until img.getHeight)
-          (r, g, b) = getRGB(img.getRGB(x, y))
-        } yield perceivedLuminance(
-          0.2126 * linearizeChannel(r / 255.0) +
-          0.7152 * linearizeChannel(g / 255.0) +
-          0.0722 * linearizeChannel(b / 255.0)
-        )
-
-      val avgLuminance = mean(pixels)
-
-      val newFileName =
-        generateNewFileName(file, avgLuminance, config.brightnessThreshold)
-
-      val dst = new File(s"${config.outDir}/$newFileName")
-
-      save(file, dst)
-    }
+      ): ZIO[Console, Throwable, Unit]
   }
 
-  private def generateNewFileName(
+  val live: ImageProcessorEnv = (files: Array[File], config: Config) => {
+    val processed =
+      for {
+        file <- files
+        // avgLuminance: Int = mean(getLuminance(file))
+
+      } yield processImage(file, config)
+
+    val darks     = processed.map(_._2)
+    val evaluated = evaluateModel(darks)
+    val saves     = ZIO.forkAll_(processed.map(_._1))
+
+    evaluated *> saves
+  }
+
+  private def processImage(
       file: File,
-      avgLuminance: Long,
-      threshold: Int
-    ): String = {
-    val oldFileName = file.getName
-    val parDir      = file.getParent
-
+      config: Config
+    ) = {
+    val oldFileName           = file.getName
     val Array(prefix, suffix) = oldFileName.split('.')
+    val luminance             = imageToLuminance(file)
+    val darkness              = getDarkness(luminance, config.brightnessThreshold)
+    val newFilename =
+      s"${config.outDir}/${prefix}_${darkness}_$luminance.$suffix"
 
-    val darkness = avgLuminance match {
-      case luminance if luminance < threshold => "dark"
-      case _                                  => "bright"
-    }
-
-    s"${prefix}_${darkness}_$avgLuminance.$suffix"
+    save(file, new File(newFilename)) -> darkness
   }
+
+  private val imageToLuminance: File => Int = mean _ compose getLuminance _
+
+  private def getDarkness(luminance: Int, threshold: Int) =
+    if (luminance < threshold) "dark"
+    else "bright"
 
   private def getRGB(pixel: Int): (Int, Int, Int) =
     ((pixel >> 16) & 0xff, (pixel >> 8) & 0xff, pixel & 0xff)
@@ -71,6 +65,19 @@ object ImageProcessor {
 
   private def mean(pixels: Seq[Double]): Int =
     scala.math.round(pixels.foldRight(0.0)(_ + _) / pixels.size).toInt
+
+  private def getLuminance(file: File) = {
+    val img = ImageIO read file
+    for {
+      x <- 0 until img.getWidth
+      y <- 0 until img.getHeight
+      (r, g, b) = getRGB(img.getRGB(x, y))
+    } yield perceivedLuminance(
+      0.2126 * linearizeChannel(r / 255.0) +
+        0.7152 * linearizeChannel(g / 255.0) +
+        0.0722 * linearizeChannel(b / 255.0)
+    )
+  }
 
   private def perceivedLuminance(x: Double): Double =
     if (x <= 0.008856) x * 903.3
@@ -90,6 +97,22 @@ object ImageProcessor {
         )
     } *> putStrLn(s"[Info] Saved new file: ${dst.getName}")
 
-  def parse(file: File, config: Config): ZIO[Console, IOException, Unit] =
-    live.parse(file, config)
+  private def evaluateModel(darknessVals: Array[String]): Task[Unit] =
+    Task {
+      (for {
+        x <- darknessVals
+          .groupMapReduce(identity)(_ => 1)(_ + _)
+          .map {
+            case (cat, count) =>
+              s"Ratio of $cat per all: ${count.toDouble / darknessVals.length}"
+          }
+      } yield x)
+        .foreach(println(_))
+    }
+
+  def parse(
+      files: Array[File],
+      config: Config
+    ): ZIO[Console, Throwable, Unit] =
+    live.parse(files, config)
 }
