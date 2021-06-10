@@ -1,0 +1,12 @@
+# This is an example Starter pipeline configuration
+# Use a skeleton to build, test and deploy using manual and parallel steps
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+image: bitbucketpipelines/scala-sbt:scala-2.13
+
+pipelines:
+  default:
+    - step:
+        name: 'Build and Test'
+        script:
+          - sbt compile test
