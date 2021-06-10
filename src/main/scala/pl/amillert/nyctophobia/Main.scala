@@ -6,10 +6,12 @@ import zio._
 object Main extends App {
   import services._
 
-  def program(args: List[String]) =
+  import errors._
+
+  private def program(args: List[String]) =
     for {
       config <- ConfigParser.parse(args)
-      files  <- FileReader.read(config)
+      files <- FileManager.FileReader.read(config)
       _ <- ImageProcessor.parse(files, config)
     } yield ()
 

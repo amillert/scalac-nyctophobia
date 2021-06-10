@@ -2,6 +2,7 @@ package pl.amillert
 package nyctophobia
 package services
 
+import scala.util.Try
 import zio._
 
 case class Config(
@@ -13,26 +14,39 @@ case class Config(
 trait ConfigParser
 
 object ConfigParser {
-  type ConfigParserEnv = ConfigParser.Service
+  import errors._
+  import java.io._
 
-  case object FailConfigParserMissingParameter extends Throwable
+  private type ConfigParserEnv = ConfigParser.Service
 
-  trait Service {
-    def parse(args: List[String]): Task[Config]
+  private trait Service {
+    def parse(args: List[String]): UIO[Config]
   }
 
-  val live: ConfigParserEnv = (args: List[String]) =>
-    ZIO
-      .fromOption {
-        args match {
-          case in :: out :: thresh :: Nil =>
-            Some(Config(in, out, thresh.toInt))
-          case _ =>
-            None: Option[Config]
-        }
+  private val live: ConfigParserEnv = (args: List[String]) =>
+    ZIO.fromEither {
+      args match {
+        case Nil =>
+          Left(NoParametersProvided)
+        case (_: String) :: (_: String) :: Nil | (_: String) :: Nil =>
+          Left(WrongArityOfParameters)
+        case (in: String) :: (out: String) :: (thresh: String) :: Nil =>
+          Try(thresh.toInt).toEither match {
+            case Right(threshold) =>
+              if (!(new File(in)).isDirectory || !(new File(out).isDirectory))
+                Left(NotADirectoryParameter)
+              else
+                Right(Config(in, out, threshold))
+            case Left(x: java.lang.NumberFormatException) =>
+              Left(WrongThresholdValue)
+            case _ =>
+              Left(UnknownConfigError)
+          }
+        case _ =>
+          Left(UnknownConfigError)
       }
-      .orDieWith(_ => FailConfigParserMissingParameter)
+    }.orDie
 
-  def parse(args: List[String]): Task[Config] =
+  def parse(args: List[String]): UIO[Config] =
     live.parse(args)
 }
