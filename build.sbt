@@ -13,9 +13,13 @@ def customPrompt(projectName: String): String =
 shellPrompt := (_ => customPrompt(name.value))
 
 lazy val libs = Seq(
-  "dev.zio"       %% "zio"       % "1.0.9",
-  "org.scalatest" %% "scalatest" % "3.2.3"
+  "dev.zio"       %% "zio"          % "1.0.9",
+  "dev.zio"       %% "zio-test"     % "1.0.9" % "test",
+  "dev.zio"       %% "zio-test-sbt" % "1.0.9" % "test",
+  "org.scalatest" %% "scalatest"    % "3.2.3"
 )
+
+testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
 lazy val `scalac-nyctophobia` =
   project
