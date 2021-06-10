@@ -2,9 +2,10 @@ package pl.amillert
 package nyctophobia
 package services
 
+import zio._
+
 import java.io._
 import scala.util.Try
-import zio._
 
 trait FileManger
 

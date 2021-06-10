@@ -2,8 +2,9 @@ package pl.amillert
 package nyctophobia
 package services
 
-import java.io._
 import zio._
+
+import java.io._
 
 trait ImageProcessor
 
