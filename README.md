@@ -10,9 +10,7 @@ When solving the task I was asked to tackle the following subtasks:
 5. Run the classification concurrently.
 
 ### Technology stack
-In the project, I've utilized [`ZIO`](https://zio.dev/ "ZIO's Homepage") library. I tried to structure the project modularly to be able to take advantage of the `ZIO's` `ZLayer` capabilities; however, ultimately I've postponed the idea. Applying `ZLayers` should be a straightforward task.
-
-For the compilation, code formatting, etc. I've used [`sbt`](https://www.scala-sbt.org/ "SBT's homepage"), [`metals`](https://scalameta.org/metals/ "Metal's homepage").
+In the project, I've utilized [`ZIO`](https://zio.dev/ "ZIO's Homepage") library. I tried to structure the project modularly to be able to take advantage of the `ZIO's` `ZLayer` capabilities; however, ultimately I've postponed the idea. Applying `ZLayers` should be a straightforward task. For the compilation, code formatting, etc. I've used [`sbt`](https://www.scala-sbt.org/ "SBT's homepage"), [`metals`](https://scalameta.org/metals/ "Metal's homepage"). For testing I've used both `Zio-Test` and [`ScalaTest`](https://www.scalatest.org/).
 
 ### Installation & running
 In order to get the project locally, one should clone the repository as follows:
@@ -47,6 +45,59 @@ sbt:scalac-nyctophobia> run photos/bright photos/out 18
 ```
 
 According to the provided assumptions, the `<input-directory>` is flat and non-empty, it contains unbroken files, whilst the `<output-directory>` is empty (but doesn't necessarily have to); more importantly it must exist in the filesystem. The `<luminance-threshold>` must be an integer number `x \in [0, 100]`.
+
+Most of the config parsing functionality and error handling can be tested with the command:
+```bash
+sbt:scalac-nyctophobia> test
+```
+
+Running the above command should result with the output:
+```
+ConfigParserFlatSpecTest:
+Config Parser
+  when provided full list of arguments
+    should succeed
+      when two initial are valid directories' paths and the last one is threshold value in range [0, 100]
+    should fail
+      when provided no arguments
+        with `NoParametersProvided`
+      when not provided enough arguments
+        with `WrongArityArguments(TooFew)`
+          one argument
+          two arguments
+      when provided too many arguments
+        with `WrongArityArguments(TooMany)`
+          e.g. four arguments
+            one additional provided as suffix
+            one additional provided as prefix
+      when initial arguments are not valid directories
+        with `NotADirectoryParameter`
+          when the first argument is not a valid directory
+          when the second argument is not a valid directory
+          when both first and second arguments are not valid directories
+      when threshold argument can't be parsed to Int
+        with `WrongThresholdValue`
+          when Float provided instead
+          when random String provided instead
+      when threshold argument is not in range
+        with `ThresholdNotInRange(TooBig)`
+          when threshold argument exceeds the range maximum value
+        with `ThresholdNotInRange(TooSmall)`
+          when threshold argument below the range minimum value
+
++ Config Parser should
+  + succeed when provided a correct full arguments list
+Ran 1 test in 648 ms: 1 succeeded, 0 ignored, 0 failed
+ScalaTest
+Run completed in 1 second, 467 milliseconds.
+Total number of tests run: 0
+Suites: completed 1, aborted 0
+Tests: succeeded 0, failed 0, canceled 0, ignored 0, pending 0
+No tests were executed.
+ZIO Test
+Done
+Passed: Total 1, Failed 0, Errors 0, Passed 1
+```
 
 ### Approach to obtaining the perceived luminance score of the image
 The method utilized is not entirely proprietary. I've been inspired by already existing research, tools. However, I have not used anyone else's code nor existing projects - the whole implementation of the processing is my own. The approach is based on a few key steps:
