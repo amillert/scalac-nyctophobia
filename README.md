@@ -153,5 +153,17 @@ The results obtained by evaluating the *model* have been juxtaposed in the table
 
 As a side note, the ratio values obtained in the last experiment seem to be more or less intuitive. Only a small portion of the images have been classified as `dark` ones. The dark screenshots are primarily taken in the terminal, IDE, or videos with the dark background; however, the great majority of the images are simply screenshots from various websites, conversations, etc. which indicates that generally speaking, they would also be classified as bright by human annotators.
 
+There's a folder containing a single pure white and a single pure black images, each of them named respectively. A simple experiment run can be viewed below:
+```
+sbt:scalac-nyctophobia> run photos/plain photos/out 30
+[info] running pl.amillert.nyctophobia.Main photos/plain photos/out 30
+Ratio of bright per all: 0.5
+Ratio of dark per all: 0.5
+[Info] Saved new file: black_dark_0.jpg
+[Info] Saved new file: white_bright_100.jpg
+```
+
+The obtained values prove that the model assigns a `0` luminance score to purely black images (since they're as dark as possible), and `100` to purely white images (they're the brightest possible). That was one of the task's criteria.
+
 ### Problems encountered
 I'm not the most experienced at using the `ZIO` library but I wanted to give it a try while tackling a real problem. I've decided to learn a bit more while working on this project. I've failed trying to compose the `ZLayers`; therefore, I've backed out and used a normal services' composition. I'm not sure about the parallelization of the computations. It doesn't seem to be the most efficient. Memory doesn't grow too significantly when running which is good but the overall run seems to be lengthy, to say the least. That's all I could have done using `ZIO` at the moment. I'm very motivated to learn a lot more but that's all I could have achieved in these few days without any prior knowledge of the tool.
