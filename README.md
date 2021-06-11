@@ -52,7 +52,7 @@ sbt:scalac-nyctophobia> test
 ```
 
 Running the above command should result with the output similar to below:
-```
+```text
 [info] FileManagerFunSpecTest:
 [info] File Reader
 [info]   when provided a valid Config
