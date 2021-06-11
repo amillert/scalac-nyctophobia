@@ -4,7 +4,7 @@ package services
 
 import org.scalatest.funspec.AnyFunSpec
 
-class ConfigParserFunSpecTest extends AnyFunSpec {
+class ConfigParserFunSpec extends AnyFunSpec {
   import Setup._
   import errors._
 
