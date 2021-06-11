@@ -5,6 +5,7 @@ package ops
 
 import javax.imageio.ImageIO
 import java.io._
+
 import zio._
 
 trait ImageOps {

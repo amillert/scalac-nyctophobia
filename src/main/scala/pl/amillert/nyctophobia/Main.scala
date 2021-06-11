@@ -6,8 +6,6 @@ import zio._
 object Main extends App {
   import services._
 
-  import errors._
-
   private def program(args: List[String]) =
     for {
       config <- ConfigParser.parse(args)

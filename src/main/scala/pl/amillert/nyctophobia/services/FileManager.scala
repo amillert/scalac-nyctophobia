@@ -20,18 +20,19 @@ object FileManager {
     }
 
     private val live: FileReaderEnv = (config: Config) =>
-      ZIO.fromEither {
-        Try(
-          new File(config.inDir).listFiles.filter(_.isFile)
-        ).toEither match {
-          case Right(files: Array[File]) =>
-            Right(files)
-          case Left(_: java.lang.NullPointerException) =>
-            Left(LoadingFailedWrongPath)
-          case Left(_: Throwable) =>
-            Left(LoadingFailedUnknown)
-        }
-      }.orDie
+      ZIO.fromEither(eitherFiles(config)).orDie
+
+    def eitherFiles(config: Config) =
+      Try(
+        new File(config.inDir).listFiles.filter(_.isFile)
+      ).toEither match {
+        case Right(files: Array[File]) =>
+          Right(files)
+        case Left(_: java.lang.NullPointerException) =>
+          Left(LoadingFailedWrongPath) // should never be raised I think
+        case Left(_: Throwable) =>
+          Left(LoadingFailedUnknown)
+      }
 
     def read(config: Config): UIO[Array[File]] =
       live.read(config)

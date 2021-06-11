@@ -2,8 +2,10 @@ package pl.amillert
 package nyctophobia
 package services
 
-import scala.util.Try
 import zio._
+
+import java.io._
+import scala.util.Try
 
 case class Config(
     inDir: String,
@@ -15,7 +17,6 @@ trait ConfigParser
 
 object ConfigParser {
   import errors._
-  import java.io._
 
   private type ConfigParserEnv = ConfigParser.Service
 
