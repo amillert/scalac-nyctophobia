@@ -51,52 +51,76 @@ Most of the config parsing functionality and error handling can be tested with t
 sbt:scalac-nyctophobia> test
 ```
 
-Running the above command should result with the output:
+Running the above command should result with the output similar to below:
 ```
-ConfigParserFlatSpecTest:
-Config Parser
-  when provided full list of arguments
-    should succeed
-      when two initial are valid directories' paths and the last one is threshold value in range [0, 100]
-    should fail
-      when provided no arguments
-        with `NoParametersProvided`
-      when not provided enough arguments
-        with `WrongArityArguments(TooFew)`
-          one argument
-          two arguments
-      when provided too many arguments
-        with `WrongArityArguments(TooMany)`
-          e.g. four arguments
-            one additional provided as suffix
-            one additional provided as prefix
-      when initial arguments are not valid directories
-        with `NotADirectoryParameter`
-          when the first argument is not a valid directory
-          when the second argument is not a valid directory
-          when both first and second arguments are not valid directories
-      when threshold argument can't be parsed to Int
-        with `WrongThresholdValue`
-          when Float provided instead
-          when random String provided instead
-      when threshold argument is not in range
-        with `ThresholdNotInRange(TooBig)`
-          when threshold argument exceeds the range maximum value
-        with `ThresholdNotInRange(TooSmall)`
-          when threshold argument below the range minimum value
+[info] FileManagerFunSpecTest:
+[info] File Reader
+[info]   when provided a valid Config
+[info]     should ONLY succeed with the array of files
+[info]       when both `in` and `out` directories are valid (which should be the case given validation in Config Parser)
+[info]     should ALWAYS fail
+[info]       with `LoadingFailedWrongPath`
+[info]       - when provided invalid input path !!! IGNORED !!!
 
-+ Config Parser should
-  + succeed when provided a correct full arguments list
-Ran 1 test in 648 ms: 1 succeeded, 0 ignored, 0 failed
-ScalaTest
-Run completed in 1 second, 467 milliseconds.
-Total number of tests run: 0
-Suites: completed 1, aborted 0
-Tests: succeeded 0, failed 0, canceled 0, ignored 0, pending 0
-No tests were executed.
-ZIO Test
-Done
-Passed: Total 1, Failed 0, Errors 0, Passed 1
+[info] ConfigParserFunSpecTest:
+[info] Config Parser
+[info]   when provided full list of arguments
+[info]     should succeed ONLY
+[info]       when two initial are valid directories' paths and the last one is threshold value in range [0, 100]
+[info]     should fail
+[info]       when initial arguments are not valid directories
+[info]         with `NotADirectoryParameter`
+[info]           when the first argument is not a valid directory
+[info]           when the second argument is not a valid directory
+[info]           when both first and second arguments are not valid directories
+[info]       when threshold argument can't be parsed to Int
+[info]         with `WrongThresholdValue`
+[info]           when Float provided instead
+[info]           when random String provided instead
+[info]       when threshold argument is not in range
+[info]         with `ThresholdNotInRange(TooBig)`
+[info]           when threshold argument exceeds the range maximum value
+[info]         with `ThresholdNotInRange(TooSmall)`
+[info]           when threshold argument below the range minimum value
+[info]   when NOT provided full list of arguments
+[info]     should ALWAYS fail
+[info]       when provided no arguments
+[info]         with `NoParametersProvided`
+[info]       when not provided enough arguments
+[info]         with `WrongArityArguments(TooFew)`
+[info]           one argument
+[info]           two arguments
+[info]       when provided too many arguments
+[info]         with `WrongArityArguments(TooMany)`
+[info]           e.g. four arguments
+[info]             one additional provided as suffix
+[info]             one additional provided as prefix
+
+Read config: Config(photos/mixed,photos/out,16)
+
+[info] + Config Parser should
+[info]   + succeed when provided a correct full arguments list
+[info] Ran 1 test in 510 ms: 1 succeeded, 0 ignored, 0 failed
+[info] ScalaTest
+[info] Run completed in 1 second, 121 milliseconds.
+[info] Total number of tests run: 0
+[info] Suites: completed 2, aborted 0
+[info] Tests: succeeded 0, failed 0, canceled 0, ignored 1, pending 0
+[info] No tests were executed.
+[info] ZIO Test
+[info] Done
+[info] Passed: Total 1, Failed 0, Errors 0, Passed 1, Ignored 1
+[success] Total time: 1 s, completed Jun 11, 2021 3:27:33 PM
+
+[info] Welcome to the scalac-nyctophobia project!
+```
+
+To run a specific test, one can execute either of the commands:
+
+```bash
+sbt:scalac-nyctophobia> testOnly *File*FunSpec
+sbt:scalac-nyctophobia> testOnly *Config*FunSpec
+sbt:scalac-nyctophobia> testOnly *Config*ZIOSpec
 ```
 
 ### Approach to obtaining the perceived luminance score of the image
@@ -122,10 +146,10 @@ The results obtained by evaluating the *model* have been juxtaposed in the table
 
 | Experiment \Ratio  	| Light % 	| Dark % 	|
 |--------------------	|---------	|--------	|
-| Brights             	| 1.0       | -      	|
-| Too_Darks           	| -       	| 1.0      	|
-| Both_Merged        	| .5     	| .5    	|
-| Screenshots        	| .8481  	| .1519 	|
+| Brights            	| 1.0       | -      	|
+| Too_Darks          	| -       	| 1.0    	|
+| Both_Merged        	| .5      	| .5    	|
+| Screenshots        	| .8481   	| .1519 	|
 
 As a side note, the ratio values obtained in the last experiment seem to be more or less intuitive. Only a small portion of the images have been classified as `dark` ones. The dark screenshots are primarily taken in the terminal, IDE, or videos with the dark background; however, the great majority of the images are simply screenshots from various websites, conversations, etc. which indicates that generally speaking, they would also be classified as bright by human annotators.
 
